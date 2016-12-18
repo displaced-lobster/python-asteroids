@@ -52,6 +52,16 @@ class Space_Object():
         elif self.position[1] > HEIGHT:
             self.position[1] -= HEIGHT
 
+    def points(self):
+        point_list = []
+        rad = -math.radians(self.direction)
+
+        for point in self.relative_coord:
+            dx = self.position[0] + point[0] * math.cos(rad) - point[1] * math.sin(rad)
+            dy = self.position[1] + point[1] * math.cos(rad) + point[0] * math.sin(rad)
+            point_list.append([dx, dy])
+        return point_list
+
     def show(self):
         pygame.draw.polygon(screen, self.color, self.points(), 2)
 
@@ -62,16 +72,6 @@ class Ship(Space_Object):
         self.relative_coord = [[-self.width // 2, self.height * 2 // 5],
                         [self.width // 2, self.height * 2 // 5],
                         [0, -self.height * 3 // 5]]
-
-    def points(self):
-        point_list = []
-        rad = -math.radians(self.direction)
-
-        for point in self.relative_coord:
-            dx = self.position[0] + point[0] * math.cos(rad) - point[1] * math.sin(rad)
-            dy = self.position[1] + point[1] * math.cos(rad) + point[0] * math.sin(rad)
-            point_list.append([dx, dy])
-        return point_list
 
 def game(ship):
     while True:
