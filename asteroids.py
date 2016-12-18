@@ -3,8 +3,7 @@ import pygame
 from pygame import K_d, K_a, K_w, K_s
 import math
 
-pygame.init()
-size = width, height = 500, 500
+SIZE = WIDTH, HEIGHT = 500, 500
 black = 0, 0, 0
 white = 255, 255, 255
 
@@ -12,10 +11,10 @@ SHIP_W = 24
 SHIP_H = 50
 MAX_SPEED = 4
 
-screen = pygame.display.set_mode(size)
+pygame.init()
+screen = pygame.display.set_mode(SIZE)
 
-class Ship:
-
+class Space_Object():
     speed = [0, 0]
     direction = 0
     delta_speed = 0
@@ -25,6 +24,12 @@ class Ship:
         self.width = width
         self.height = height
         self.color = color
+
+
+class Ship(Space_Object):
+
+    def __init__(self, position, width, height, color):
+        Space_Object.__init__(self, position, width, height, color)
         self.relative_coord = [[-self.width // 2, self.height * 2 // 5],
                         [self.width // 2, self.height * 2 // 5],
                         [0, -self.height * 3 // 5]]
@@ -48,13 +53,13 @@ class Ship:
         self.position[0] += self.speed[0]
         self.position[1] += self.speed[1]
         if self.position[0] < 0:
-            self.position[0] += width
-        elif self.position[0] > width:
-            self.position[0] -= width
+            self.position[0] += WIDTH
+        elif self.position[0] > WIDTH:
+            self.position[0] -= WIDTH
         if self.position[1] < 0:
-            self.position[1] += height
-        elif self.position[1] > height:
-            self.position[1] -= height
+            self.position[1] += HEIGHT
+        elif self.position[1] > HEIGHT:
+            self.position[1] -= HEIGHT
 
     def points(self):
         point_list = []
@@ -68,7 +73,6 @@ class Ship:
 
     def show(self):
         pygame.draw.polygon(screen, self.color, self.points(), 2)
-
 
 def game(ship):
     while True:
@@ -98,10 +102,12 @@ def game(ship):
         pygame.time.wait(25)
 
 def init():
-    ship = Ship([width // 2, height // 2],
+
+    ship = Ship([WIDTH // 2, HEIGHT // 2],
                 SHIP_W,
                 SHIP_H,
                 white)
+
     game(ship)
 
 if __name__ == '__main__':
