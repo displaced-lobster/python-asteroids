@@ -1,6 +1,6 @@
 import sys
 import pygame
-from pygame import K_d, K_a, K_w, K_s
+from pygame import K_d, K_a, K_w, K_s, K_SPACE
 import math
 
 SIZE = WIDTH, HEIGHT = 500, 500
@@ -18,6 +18,7 @@ class Space_Object():
     speed = [0, 0]
     direction = 0
     delta_speed = 0
+    speed_limit = MAX_SPEED
 
     def __init__(self, position, width, height, color):
         self.position = position
@@ -32,14 +33,14 @@ class Space_Object():
         self.speed[0] -= sx
         self.speed[1] += sy
 
-        if self.speed[0] > MAX_SPEED:
-            self.speed[0] = MAX_SPEED
-        elif self.speed[0] < -MAX_SPEED:
-            self.speed[0] = -MAX_SPEED
-        if self.speed[1] > MAX_SPEED:
-            self.speed[1] = MAX_SPEED
-        elif self.speed[1] < -MAX_SPEED:
-            self.speed[1] = -MAX_SPEED
+        if self.speed[0] > self.speed_limit:
+            self.speed[0] = self.speed_limit
+        elif self.speed[0] < -self.speed_limit:
+            self.speed[0] = -self.speed_limit
+        if self.speed[1] > self.speed_limit:
+            self.speed[1] = self.speed_limit
+        elif self.speed[1] < -self.speed_limit:
+            self.speed[1] = -self.speed_limit
 
         self.position[0] += self.speed[0]
         self.position[1] += self.speed[1]
@@ -66,12 +67,36 @@ class Space_Object():
         pygame.draw.polygon(screen, self.color, self.points(), 2)
 
 class Ship(Space_Object):
+    shots = []
 
     def __init__(self, position, width, height, color):
         Space_Object.__init__(self, position, width, height, color)
         self.relative_coord = [[-self.width // 2, self.height * 2 // 5],
                         [self.width // 2, self.height * 2 // 5],
                         [0, -self.height * 3 // 5]]
+
+    def shoot(self):
+        origin = self.points()[2]
+        self.shots.append(Shot(origin, self.direction, self.color))
+
+class Shot(Space_Object):
+
+    width = 2
+    height = 6
+    speed_limit = MAX_SPEED + 1
+
+    def __init__(self, position, direction, color):
+        self.position = position
+        self.direction = direction
+        self.color = color
+        rad = -math.radians(self.direction)
+        self.speed = [self.speed_limit * math.sin(rad),
+                    -self.speed_limit * math.cos(rad)]
+        self.relative_coord = [[0, 0], [0, self.height]]
+
+    def show(self):
+        points = self.points()
+        pygame.draw.line(screen, self.color, points[0], points[1], self.width)
 
 def game(ship):
     while True:
@@ -82,9 +107,14 @@ def game(ship):
 
         ship.show()
 
+        for shot in ship.shots:
+            shot.show()
+            shot.move()
+
         ship.delta_speed = 0
 
         keys = pygame.key.get_pressed()
+
         if keys[K_w]:
             ship.delta_speed -= 1
         elif keys[K_s]:
@@ -94,6 +124,9 @@ def game(ship):
             ship.direction += 2
         elif keys[K_d]:
             ship.direction -= 2
+
+        if keys[K_SPACE]:
+            ship.shoot()
 
         ship.move()
 
