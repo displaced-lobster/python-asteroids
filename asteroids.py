@@ -73,6 +73,11 @@ class Space_Object:
     def show(self):
         pygame.draw.polygon(screen, self.color, self.points(), 2)
 
+    def collision(self, item):
+        if item.x >= self.x - self.width / 2 and item.x <= self.x + self.width / 2:
+            if item.y >= self.y - self.height / 2 and item.y <= self.y + self.height / 2:
+                return True
+
 class Ship(Space_Object):
     shots = []
     shot_limit = 10
@@ -101,7 +106,6 @@ class Ship(Space_Object):
             elif self.shots[i].x > WIDTH or self.shots[i].y > HEIGHT:
                 del self.shots[i]
                 break
-
 
 class Shot(Space_Object):
 
@@ -151,14 +155,6 @@ class Asteroid(Space_Object):
 
         self.rotation = random.randint(-20, 20)
 
-    def collision(self, shots):
-        for shot in shots:
-            if shot.position[0] >= self.position[0] - self.width / 2 and shot.position[0] <= self.position[0] + self.width / 2:
-                if shot.position[1] >= self.position[1] - self.height / 2 and shot.position[1] <= self.position[1] + self.height / 2:
-                    return True
-        return False
-
-
 class Big_Asteroid(Asteroid):
     height = 75
     width = 75
@@ -167,11 +163,9 @@ class Big_Asteroid(Asteroid):
     def __init__(self, position, color):
         Asteroid.__init__(self, position, color)
 
-
     def explode(self, asteroid_list):
         for i in range(3):
             asteroids.append(Small_Asteroid(self.position, self.color))
-
 
 class Small_Asteroid(Asteroid):
     height = 20
@@ -184,11 +178,19 @@ class Small_Asteroid(Asteroid):
     def explode(self, asteroid_list):
         return
 
-
 ship = Ship([WIDTH // 2, HEIGHT // 2],
             SHIP_W,
             SHIP_H,
             white)
+
+def collision_check(asteroids, shots):
+    for i in range(len(asteroids)):
+        for j in range(len(shots)):
+            if asteroids[i].collision(shots[j]):
+                asteroids[i].explode(asteroids)
+                del asteroids[i]
+                del shots[j]
+                return
 
 def game():
     while True:
@@ -231,11 +233,7 @@ def game():
             asteroid.move()
             asteroid.show()
 
-        for i in range(len(asteroids)):
-            if asteroids[i].collision(ship.shots):
-                asteroids[i].explode(asteroids)
-                del asteroids[i]
-                break
+        collision_check(asteroids, ship.shots)
 
         pygame.display.flip()
         pygame.time.wait(25)
