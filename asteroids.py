@@ -15,6 +15,7 @@ ASTEROID_LIMIT = 5
 
 pygame.init()
 screen = pygame.display.set_mode(SIZE)
+asteroids = []
 
 class Space_Object:
     speed = [0, 0]
@@ -25,6 +26,8 @@ class Space_Object:
 
     def __init__(self, position, width, height, color):
         self.position = position
+        self.x = position[0]
+        self.y = position[1]
         self.width = width
         self.height = height
         self.color = color
@@ -45,24 +48,25 @@ class Space_Object:
         elif self.speed[1] < -self.speed_limit:
             self.speed[1] = -self.speed_limit
 
-        self.position[0] += self.speed[0]
-        self.position[1] += self.speed[1]
-        if self.position[0] < 0 - 10:
-            self.position[0] += WIDTH
-        elif self.position[0] > WIDTH + 10:
-            self.position[0] -= WIDTH
-        if self.position[1] < 0 - 10:
-            self.position[1] += HEIGHT
-        elif self.position[1] > HEIGHT + 10:
-            self.position[1] -= HEIGHT
+        self.x += self.speed[0]
+        self.y += self.speed[1]
+        if self.x < 0 - 10:
+            self.x += WIDTH
+        elif self.x > WIDTH + 10:
+            self.x -= WIDTH
+        if self.y < 0 - 10:
+            self.y += HEIGHT
+        elif self.y > HEIGHT + 10:
+            self.y -= HEIGHT
+        self.position = [self.x, self.y]
 
     def points(self):
         point_list = []
         rad = -math.radians(self.direction)
 
         for point in self.relative_coord:
-            dx = self.position[0] + point[0] * math.cos(rad) - point[1] * math.sin(rad)
-            dy = self.position[1] + point[1] * math.cos(rad) + point[0] * math.sin(rad)
+            dx = self.x + point[0] * math.cos(rad) - point[1] * math.sin(rad)
+            dy = self.y + point[1] * math.cos(rad) + point[0] * math.sin(rad)
             point_list.append([dx, dy])
         return point_list
 
@@ -91,10 +95,10 @@ class Ship(Space_Object):
 
     def remove_shots(self):
         for i in range(len(self.shots)):
-            if self.shots[i].position[0] < 0 or self.shots[i].position[1] < 0:
+            if self.shots[i].x < 0 or self.shots[i].y < 0:
                 del self.shots[i]
                 break
-            elif self.shots[i].position[0] > WIDTH or self.shots[i].position[1] > HEIGHT:
+            elif self.shots[i].x > WIDTH or self.shots[i].y > HEIGHT:
                 del self.shots[i]
                 break
 
@@ -106,9 +110,8 @@ class Shot(Space_Object):
     speed_limit = MAX_SPEED + 4
 
     def __init__(self, position, direction, color):
-        self.position = position
+        Space_Object.__init__(self, position, self.width, self.height, color)
         self.direction = direction
-        self.color = color
         rad = -math.radians(self.direction)
         self.speed = [self.speed_limit * math.sin(rad),
                     -self.speed_limit * math.cos(rad)]
@@ -120,43 +123,74 @@ class Shot(Space_Object):
 
 class Asteroid(Space_Object):
 
-    def __init__(self, color):
-        self.color = color
-        start = random.choice([1, 2, 3, 4])
-        if start == 1:
-            self.position = [0, random.randint(0, HEIGHT)]
-        elif start == 2:
-            self.position = [WIDTH, random.randint(0, HEIGHT)]
-        elif start == 3:
-            self.position = [random.randint(0, WIDTH), 0]
-        else:
-            self.position = [random.randint(0, WIDTH), HEIGHT]
+    def __init__(self, position, color):
+        if position is None:
+            start = random.choice([1, 2, 3, 4])
+            if start == 1:
+                position = [0, random.randint(0, HEIGHT)]
+            elif start == 2:
+                position = [WIDTH, random.randint(0, HEIGHT)]
+            elif start == 3:
+                position = [random.randint(0, WIDTH), 0]
+            else:
+                position = [random.randint(0, WIDTH), HEIGHT]
+
+        Space_Object.__init__(self, position, self.width, self.height, color)
 
         self.speed = random.randint(1, self.speed_limit)
         self.direction = random.randint(0, 365)
 
-        self.relative_coord = [[0,0], [0, 20], [20, 20], [20, 0]]
+        self.relative_coord = [[-self.width / 2, -self.height / 2],
+                            [self.width / 2, -self.height / 2],
+                            [self.width / 2, self.height / 2],
+                            [-self.width / 2, self.height / 2]]
 
         rad = -math.radians(self.direction)
         self.speed = [self.speed_limit * math.sin(rad),
                     -self.speed_limit * math.cos(rad)]
 
-        self.rotation = random.randint(-4, 4)
+        self.rotation = random.randint(-20, 20)
+
+    def collision(self, shots):
+        for shot in shots:
+            if shot.position[0] >= self.position[0] - self.width / 2 and shot.position[0] <= self.position[0] + self.width / 2:
+                if shot.position[1] >= self.position[1] - self.height / 2 and shot.position[1] <= self.position[1] + self.height / 2:
+                    return True
+        return False
+
 
 class Big_Asteroid(Asteroid):
     height = 75
     width = 75
     speed_limit = MAX_SPEED - 2
 
-    def __init__(self, color):
-        Asteroid.__init__(self, color)
+    def __init__(self, position, color):
+        Asteroid.__init__(self, position, color)
+
+
+    def explode(self, asteroid_list):
+        for i in range(3):
+            asteroids.append(Small_Asteroid(self.position, self.color))
+
 
 class Small_Asteroid(Asteroid):
     height = 20
     width = 20
     speed_limit = MAX_SPEED - 1
 
-def game(ship, asteroids):
+    def __init__(self, position, color):
+        Asteroid.__init__(self, position, color)
+
+    def explode(self, asteroid_list):
+        return
+
+
+ship = Ship([WIDTH // 2, HEIGHT // 2],
+            SHIP_W,
+            SHIP_H,
+            white)
+
+def game():
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT: sys.exit()
@@ -191,25 +225,20 @@ def game(ship, asteroids):
 
         if len(asteroids) < ASTEROID_LIMIT:
             if random.choice([True, False]):
-                asteroids.append(Big_Asteroid(white))
+                asteroids.append(Big_Asteroid(None, white))
 
         for asteroid in asteroids:
             asteroid.move()
             asteroid.show()
 
+        for i in range(len(asteroids)):
+            if asteroids[i].collision(ship.shots):
+                asteroids[i].explode(asteroids)
+                del asteroids[i]
+                break
+
         pygame.display.flip()
         pygame.time.wait(25)
 
-def init():
-
-    ship = Ship([WIDTH // 2, HEIGHT // 2],
-                SHIP_W,
-                SHIP_H,
-                white)
-
-    asteroids = []
-
-    game(ship, asteroids)
-
 if __name__ == '__main__':
-    init()
+    game()
