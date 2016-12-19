@@ -44,13 +44,13 @@ class Space_Object():
 
         self.position[0] += self.speed[0]
         self.position[1] += self.speed[1]
-        if self.position[0] < 0:
+        if self.position[0] < 0 - 10:
             self.position[0] += WIDTH
-        elif self.position[0] > WIDTH:
+        elif self.position[0] > WIDTH + 10:
             self.position[0] -= WIDTH
-        if self.position[1] < 0:
+        if self.position[1] < 0 - 10:
             self.position[1] += HEIGHT
-        elif self.position[1] > HEIGHT:
+        elif self.position[1] > HEIGHT + 10:
             self.position[1] -= HEIGHT
 
     def points(self):
@@ -68,6 +68,8 @@ class Space_Object():
 
 class Ship(Space_Object):
     shots = []
+    shot_limit = 10
+    shot_delay = 0
 
     def __init__(self, position, width, height, color):
         Space_Object.__init__(self, position, width, height, color)
@@ -77,13 +79,27 @@ class Ship(Space_Object):
 
     def shoot(self):
         origin = self.points()[2]
-        self.shots.append(Shot(origin, self.direction, self.color))
+        if self.shot_delay == 0:
+            if len(self.shots) < 10:
+                self.shots.append(Shot(origin, self.direction, self.color))
+                self.shot_delay = 8
+        else:
+            self.shot_delay -= 1
+
+    def remove_shots(self):
+        for i in range(len(self.shots)):
+            if self.shots[i].position[0] < 0 or self.shots[i].position[1] < 0:
+                del self.shots[i]
+                break
+            elif self.shots[i].position[0] > WIDTH or self.shots[i].position[1] > HEIGHT:
+                del self.shots[i]
+                break
 
 class Shot(Space_Object):
 
     width = 2
     height = 6
-    speed_limit = MAX_SPEED + 1
+    speed_limit = MAX_SPEED + 4
 
     def __init__(self, position, direction, color):
         self.position = position
@@ -98,6 +114,7 @@ class Shot(Space_Object):
         points = self.points()
         pygame.draw.line(screen, self.color, points[0], points[1], self.width)
 
+
 def game(ship):
     while True:
         for event in pygame.event.get():
@@ -106,6 +123,7 @@ def game(ship):
         screen.fill(black)
 
         ship.show()
+        ship.remove_shots()
 
         for shot in ship.shots:
             shot.show()
