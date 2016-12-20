@@ -15,6 +15,8 @@ ASTEROID_LIMIT = 5
 
 pygame.init()
 screen = pygame.display.set_mode(SIZE)
+font = pygame.font.SysFont('monospace', 25)
+
 asteroids = []
 explosions = []
 acceleration = 0.5
@@ -147,10 +149,16 @@ class Asteroid(Space_Object):
         self.speed = random.randint(1, self.speed_limit)
         self.direction = random.randint(0, 365)
 
-        self.relative_coord = [[-self.width / 2, -self.height / 2],
-                            [self.width / 2, -self.height / 2],
-                            [self.width / 2, self.height / 2],
-                            [-self.width / 2, self.height / 2]]
+        self.relative_coord = [[-self.width / 2, -self.height / 3],
+                            [-self.width / 3, -self.height / 2],
+                            [self.width / 6, -self.height / 2],
+                            [self.width / 2, -self.height / 6],
+                            [self.width / 2, self.height / 3],
+                            [self.width / 3, self.height / 2],
+                            [self.width / 6, self.height / 2],
+                            [-self.width / 6, self.height / 6],
+                            [-self.width / 3, self.height / 6],
+                            [-self.width / 2, 0]]
 
         rad = -math.radians(self.direction)
         self.speed = [self.speed_limit * math.sin(rad),
@@ -194,15 +202,20 @@ ship = Ship([WIDTH // 2, HEIGHT // 2],
             SHIP_H,
             white)
 
-def collision_check(asteroids, shots):
+def collision_check(asteroids, shots, score):
     for i in range(len(asteroids)):
         for j in range(len(shots)):
             if asteroids[i].collision(shots[j]):
                 asteroids[i].explode(asteroids)
                 explosion(asteroids[i])
+                if isinstance(asteroids[i], Big_Asteroid):
+                    score += 100
+                else:
+                    score += 50
                 del asteroids[i]
                 del shots[j]
-                return
+                return score
+    return score
 
 def explosion(item):
     explosion = []
@@ -222,12 +235,19 @@ def handle_explosions():
             else:
                 explosion[i].timer -= 1
 
-def game():
+def handle_score(score):
+    display_score = font.render(str(score), False, white)
+    width, height = font.size(str(score))
+    screen.blit(display_score, (WIDTH - width - 10, HEIGHT - height - 10))
+
+def game(score):
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT: sys.exit()
 
         screen.fill(black)
+
+        handle_score(score)
 
         ship.show()
         ship.remove_shots()
@@ -263,7 +283,7 @@ def game():
             asteroid.move()
             asteroid.show()
 
-        collision_check(asteroids, ship.shots)
+        score = collision_check(asteroids, ship.shots, score)
 
         handle_explosions()
 
@@ -275,5 +295,7 @@ def game():
         pygame.display.flip()
         pygame.time.wait(25)
 
+
 if __name__ == '__main__':
-    game()
+    score = 0
+    game(score)
