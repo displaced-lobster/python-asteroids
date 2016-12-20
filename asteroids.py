@@ -133,6 +133,38 @@ class Shot(Space_Object):
 class Asteroid(Space_Object):
 
     def __init__(self, position, color):
+        ASTEROID_SHAPES = [
+                        [
+                        [-self.width / 2, -self.height / 3],
+                        [-self.width / 3, -self.height / 2],
+                        [self.width / 6, -self.height / 2],
+                        [self.width / 2, -self.height / 6],
+                        [self.width / 2, self.height / 3],
+                        [self.width / 3, self.height / 2],
+                        [self.width / 6, self.height / 2],
+                        [-self.width / 6, self.height / 6],
+                        [-self.width / 3, self.height / 6],
+                        [-self.width / 2, 0]
+                        ],
+                        [
+                        [0, self.height / 2],
+                        [self.width / 6, self.height / 2],
+                        [self.width / 3, self.height / 3],
+                        [self.width / 3, self.height / 6],
+                        [self.width / 2, 0],
+                        [self.width / 2, -self.height / 6],
+                        [self.width / 3, -self.height / 3],
+                        [self.width / 6, -self.height / 3],
+                        [0, -self.height / 2],
+                        [-self.width / 6, -self.height / 2],
+                        [-self.width / 6, -self.height / 3],
+                        [-self.width / 2, 0],
+                        [-self.width / 2, self.height / 6],
+                        [-self.width / 3, self.height / 3],
+                        [-self.width / 6, self.height / 3]
+                        ]
+                        ]
+
         if position is None:
             start = random.choice([1, 2, 3, 4])
             if start == 1:
@@ -149,16 +181,16 @@ class Asteroid(Space_Object):
         self.speed = random.randint(1, self.speed_limit)
         self.direction = random.randint(0, 365)
 
-        self.relative_coord = [[-self.width / 2, -self.height / 3],
-                            [-self.width / 3, -self.height / 2],
-                            [self.width / 6, -self.height / 2],
-                            [self.width / 2, -self.height / 6],
-                            [self.width / 2, self.height / 3],
-                            [self.width / 3, self.height / 2],
-                            [self.width / 6, self.height / 2],
-                            [-self.width / 6, self.height / 6],
-                            [-self.width / 3, self.height / 6],
-                            [-self.width / 2, 0]]
+        self.relative_coord = ASTEROID_SHAPES[random.randint(0, len(ASTEROID_SHAPES) - 1)]
+        #self.relative_coord = [[-self.width / 2, -self.height / 3],
+        #                    [self.width / 6, -self.height / 2],
+        #                    [self.width / 2, -self.height / 6],
+        #                    [self.width / 2, self.height / 3],
+        #                    [self.width / 3, self.height / 2],
+        #                    [self.width / 6, self.height / 2],
+        #                    [-self.width / 6, self.height / 6],
+        #                    [-self.width / 3, self.height / 6],
+        #                    [-self.width / 2, 0]]
 
         rad = -math.radians(self.direction)
         self.speed = [self.speed_limit * math.sin(rad),
@@ -294,7 +326,6 @@ def game(score):
 
         pygame.display.flip()
         pygame.time.wait(25)
-
 
 if __name__ == '__main__':
     score = 0
