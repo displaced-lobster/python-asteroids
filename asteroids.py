@@ -10,12 +10,15 @@ white = 255, 255, 255
 
 SHIP_W = 12
 SHIP_H = 25
-MAX_SPEED = 4
+MAX_SPEED = 3
 ASTEROID_LIMIT = 5
 
 pygame.init()
 screen = pygame.display.set_mode(SIZE)
 asteroids = []
+explosions = []
+acceleration = 0.5
+turn_speed = 5
 
 class Space_Object:
     speed = [0, 0]
@@ -178,6 +181,14 @@ class Small_Asteroid(Asteroid):
     def explode(self, asteroid_list):
         return
 
+class Debris(Shot):
+    width = 1
+    def __init__(self, position, direction, color):
+        self.height = random.randint(1, 20)
+        Shot.__init__(self, position, direction, color)
+        self.timer = random.randint(5, 15)
+
+
 ship = Ship([WIDTH // 2, HEIGHT // 2],
             SHIP_W,
             SHIP_H,
@@ -188,9 +199,28 @@ def collision_check(asteroids, shots):
         for j in range(len(shots)):
             if asteroids[i].collision(shots[j]):
                 asteroids[i].explode(asteroids)
+                explosion(asteroids[i])
                 del asteroids[i]
                 del shots[j]
                 return
+
+def explosion(item):
+    explosion = []
+    direction = random.randint(0, 365)
+    debris_amount = 5
+    for i in range(debris_amount):
+        explosion.append(Debris(item.position, direction, white))
+        direction += 73
+    explosions.append(explosion)
+
+def handle_explosions():
+    for explosion in explosions:
+        for i in range(len(explosion)):
+            if explosion[i].timer <= 0:
+                del explosion[i]
+                return
+            else:
+                explosion[i].timer -= 1
 
 def game():
     while True:
@@ -211,14 +241,14 @@ def game():
         keys = pygame.key.get_pressed()
 
         if keys[K_w]:
-            ship.delta_speed -= 1
+            ship.delta_speed -= acceleration
         elif keys[K_s]:
-            ship.delta_speed += 1
+            ship.delta_speed += acceleration
 
         if keys[K_a]:
-            ship.direction += 2
+            ship.direction += turn_speed
         elif keys[K_d]:
-            ship.direction -= 2
+            ship.direction -= turn_speed
 
         if keys[K_SPACE]:
             ship.shoot()
@@ -234,6 +264,13 @@ def game():
             asteroid.show()
 
         collision_check(asteroids, ship.shots)
+
+        handle_explosions()
+
+        for explosion in explosions:
+            for debris in explosion:
+                debris.move()
+                debris.show()
 
         pygame.display.flip()
         pygame.time.wait(25)
