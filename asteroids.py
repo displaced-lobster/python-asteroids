@@ -22,6 +22,7 @@ explosions = []
 acceleration = 0.5
 turn_speed = 5
 
+
 class Space_Object:
     speed = [0, 0]
     direction = 0
@@ -79,9 +80,12 @@ class Space_Object:
         pygame.draw.polygon(screen, self.color, self.points(), 2)
 
     def collision(self, item):
-        if item.x >= self.x - self.width / 2 and item.x <= self.x + self.width / 2:
-            if item.y >= self.y - self.height / 2 and item.y <= self.y + self.height / 2:
-                return True
+        if item.x >= self.x - self.width / 2:
+            if item.x <= self.x + self.width / 2:
+                if item.y >= self.y - self.height / 2:
+                    if item.y <= self.y + self.height / 2:
+                        return True
+
 
 class Ship(Space_Object):
     shots = []
@@ -91,8 +95,8 @@ class Ship(Space_Object):
     def __init__(self, position, width, height, color):
         Space_Object.__init__(self, position, width, height, color)
         self.relative_coord = [[-self.width // 2, self.height * 2 // 5],
-                        [self.width // 2, self.height * 2 // 5],
-                        [0, -self.height * 3 // 5]]
+                               [self.width // 2, self.height * 2 // 5],
+                               [0, -self.height * 3 // 5]]
 
     def shoot(self):
         origin = self.points()[2]
@@ -112,6 +116,7 @@ class Ship(Space_Object):
                 del self.shots[i]
                 break
 
+
 class Shot(Space_Object):
 
     width = 2
@@ -123,46 +128,43 @@ class Shot(Space_Object):
         self.direction = direction
         rad = -math.radians(self.direction)
         self.speed = [self.speed_limit * math.sin(rad),
-                    -self.speed_limit * math.cos(rad)]
+                      -self.speed_limit * math.cos(rad)]
         self.relative_coord = [[0, 0], [0, self.height]]
 
     def show(self):
         points = self.points()
         pygame.draw.line(screen, self.color, points[0], points[1], self.width)
 
+
 class Asteroid(Space_Object):
 
     def __init__(self, position, color):
         ASTEROID_SHAPES = [
-                        [
-                        [-self.width / 2, -self.height / 3],
-                        [-self.width / 3, -self.height / 2],
-                        [self.width / 6, -self.height / 2],
-                        [self.width / 2, -self.height / 6],
-                        [self.width / 2, self.height / 3],
-                        [self.width / 3, self.height / 2],
-                        [self.width / 6, self.height / 2],
-                        [-self.width / 6, self.height / 6],
-                        [-self.width / 3, self.height / 6],
-                        [-self.width / 2, 0]
-                        ],
-                        [
-                        [0, self.height / 2],
-                        [self.width / 6, self.height / 2],
-                        [self.width / 3, self.height / 3],
-                        [self.width / 3, self.height / 6],
-                        [self.width / 2, 0],
-                        [self.width / 2, -self.height / 6],
-                        [self.width / 3, -self.height / 3],
-                        [self.width / 6, -self.height / 3],
-                        [0, -self.height / 2],
-                        [-self.width / 6, -self.height / 2],
-                        [-self.width / 6, -self.height / 3],
-                        [-self.width / 2, 0],
-                        [-self.width / 2, self.height / 6],
-                        [-self.width / 3, self.height / 3],
-                        [-self.width / 6, self.height / 3]
-                        ]
+                        [[-self.width / 2, -self.height / 3],
+                         [-self.width / 3, -self.height / 2],
+                         [self.width / 6, -self.height / 2],
+                         [self.width / 2, -self.height / 6],
+                         [self.width / 2, self.height / 3],
+                         [self.width / 3, self.height / 2],
+                         [self.width / 6, self.height / 2],
+                         [-self.width / 6, self.height / 6],
+                         [-self.width / 3, self.height / 6],
+                         [-self.width / 2, 0]],
+                        [[0, self.height / 2],
+                         [self.width / 6, self.height / 2],
+                         [self.width / 3, self.height / 3],
+                         [self.width / 3, self.height / 6],
+                         [self.width / 2, 0],
+                         [self.width / 2, -self.height / 6],
+                         [self.width / 3, -self.height / 3],
+                         [self.width / 6, -self.height / 3],
+                         [0, -self.height / 2],
+                         [-self.width / 6, -self.height / 2],
+                         [-self.width / 6, -self.height / 3],
+                         [-self.width / 2, 0],
+                         [-self.width / 2, self.height / 6],
+                         [-self.width / 3, self.height / 3],
+                         [-self.width / 6, self.height / 3]]
                         ]
 
         if position is None:
@@ -181,8 +183,8 @@ class Asteroid(Space_Object):
         self.speed = random.randint(1, self.speed_limit)
         self.direction = random.randint(0, 365)
 
-        self.relative_coord = ASTEROID_SHAPES[random.randint(0, len(ASTEROID_SHAPES) - 1)]
-        #self.relative_coord = [[-self.width / 2, -self.height / 3],
+        self.relative_coord = ASTEROID_SHAPES[random.randint(0, len(ASTEROID_SHAPES) - 1)] # noqa
+        # self.relative_coord = [[-self.width / 2, -self.height / 3],
         #                    [self.width / 6, -self.height / 2],
         #                    [self.width / 2, -self.height / 6],
         #                    [self.width / 2, self.height / 3],
@@ -194,9 +196,10 @@ class Asteroid(Space_Object):
 
         rad = -math.radians(self.direction)
         self.speed = [self.speed_limit * math.sin(rad),
-                    -self.speed_limit * math.cos(rad)]
+                      -self.speed_limit * math.cos(rad)]
 
         self.rotation = random.randint(-20, 20)
+
 
 class Big_Asteroid(Asteroid):
     height = 75
@@ -210,6 +213,7 @@ class Big_Asteroid(Asteroid):
         for i in range(3):
             asteroids.append(Small_Asteroid(self.position, self.color))
 
+
 class Small_Asteroid(Asteroid):
     height = 20
     width = 20
@@ -221,8 +225,10 @@ class Small_Asteroid(Asteroid):
     def explode(self, asteroid_list):
         return
 
+
 class Debris(Shot):
     width = 1
+
     def __init__(self, position, direction, color):
         self.height = random.randint(1, 20)
         Shot.__init__(self, position, direction, color)
@@ -233,6 +239,7 @@ ship = Ship([WIDTH // 2, HEIGHT // 2],
             SHIP_W,
             SHIP_H,
             white)
+
 
 def collision_check(asteroids, shots, score):
     for i in range(len(asteroids)):
@@ -249,6 +256,7 @@ def collision_check(asteroids, shots, score):
                 return score
     return score
 
+
 def explosion(item):
     explosion = []
     direction = random.randint(0, 365)
@@ -257,6 +265,7 @@ def explosion(item):
         explosion.append(Debris(item.position, direction, white))
         direction += 73
     explosions.append(explosion)
+
 
 def handle_explosions():
     for explosion in explosions:
@@ -267,15 +276,18 @@ def handle_explosions():
             else:
                 explosion[i].timer -= 1
 
+
 def handle_score(score):
     display_score = font.render(str(score), False, white)
     width, height = font.size(str(score))
     screen.blit(display_score, (WIDTH - width - 10, HEIGHT - height - 10))
 
+
 def game(score):
     while True:
         for event in pygame.event.get():
-            if event.type == pygame.QUIT: sys.exit()
+            if event.type == pygame.QUIT:
+                sys.exit()
 
         screen.fill(black)
 
@@ -326,6 +338,7 @@ def game(score):
 
         pygame.display.flip()
         pygame.time.wait(25)
+
 
 if __name__ == '__main__':
     score = 0
