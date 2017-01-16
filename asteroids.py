@@ -20,8 +20,17 @@ font = pygame.font.SysFont('monospace', 25)
 
 asteroids = []
 explosions = []
-acceleration = 0.5
-turn_speed = 5
+
+
+class Game_Space:
+    asteroids = []
+    explosions = []
+    score = 0
+
+    def __init__(self):
+        self.ship = Ship([WIDTH // 2, HEIGHT // 2], SHIP_W, SHIP_H)
+        self.screen = pygame.display.set_mode(SIZE)
+        self.font = pygame.font.SysFont('monospace', 25)
 
 
 class Space_Object:
@@ -43,6 +52,7 @@ class Space_Object:
         rad = -math.radians(self.direction + self.rotation)
         sx = self.delta_speed * math.sin(rad)
         sy = self.delta_speed * math.cos(rad)
+        self.delta_speed = 0
         self.speed[0] -= sx
         self.speed[1] += sy
 
@@ -111,6 +121,8 @@ class Ship(Space_Object):
     shots = []
     shot_limit = 10
     shot_delay = 0
+    acceleration = 2
+    turn_speed = 5
 
     def __init__(self, position, width, height):
         Space_Object.__init__(self, position, width, height)
@@ -248,6 +260,22 @@ class Debris(Shot):
         self.timer = random.randint(5, 15)
 
 
+class Satelite(Space_Object):
+    speed = [-MAX_SPEED, 0]
+
+    def __init__(self):
+        Space_Object.__init__(self, [WIDTH, HEIGHT // 2], 12, 12)
+
+    def show(self):
+        line_1 = [self.x, self.y - self.height / 4]
+        line_2 = [self.x + self.width / 4, self.y]
+        line_3 = [self.x, self.y + self.height / 4]
+        pygame.draw.circle(screen, self.color, self.position, self.width/4, 1)
+        pygame.draw.line(screen, self.color, line_1[0], line_1[1], 1)
+        pygame.draw.line(screen, self.color, line_2[0], line_2[1], 1)
+        pygame.draw.line(screen, self.color, line_3[0], line_3[1], 1)
+
+
 ship = Ship([WIDTH // 2, HEIGHT // 2],
             SHIP_W,
             SHIP_H)
@@ -295,7 +323,7 @@ def game_over():
     ship.y = HEIGHT // 2
 
 
-def game(score):
+def main(game):
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -303,33 +331,31 @@ def game(score):
 
         screen.fill(black)
 
-        handle_score(score)
+        handle_score(game.score)
 
-        ship.show()
-        ship.remove_shots()
+        game.ship.show()
+        game.ship.remove_shots()
 
-        for shot in ship.shots:
+        for shot in game.ship.shots:
             shot.show()
             shot.move()
-
-        ship.delta_speed = 0
 
         keys = pygame.key.get_pressed()
 
         if keys[K_w]:
-            ship.delta_speed -= acceleration
+            game.ship.delta_speed -= game.ship.acceleration
         elif keys[K_s]:
-            ship.delta_speed += acceleration
+            game.ship.delta_speed += game.ship.acceleration
 
         if keys[K_a]:
-            ship.direction += turn_speed
+            game.ship.direction += game.ship.turn_speed
         elif keys[K_d]:
-            ship.direction -= turn_speed
+            game.ship.direction -= game.ship.turn_speed
 
         if keys[K_SPACE]:
-            ship.shoot()
+            game.ship.shoot()
 
-        ship.move()
+        game.ship.move()
 
         if len(asteroids) < ASTEROID_LIMIT:
             if random.choice([True, False]):
@@ -339,7 +365,7 @@ def game(score):
             asteroid.move()
             asteroid.show()
 
-        score = collision_check(asteroids, ship.shots, score)
+        game.score = collision_check(asteroids, ship.shots, game.score)
 
         handle_explosions()
 
@@ -353,5 +379,6 @@ def game(score):
 
 
 if __name__ == '__main__':
-    score = 0
-    game(score)
+    pygame.init()
+    game = Game_Space()
+    main(game)
