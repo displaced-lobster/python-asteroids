@@ -80,11 +80,30 @@ class Space_Object:
         pygame.draw.polygon(screen, self.color, self.points(), 2)
 
     def collision(self, item):
+        min_safe_x = self.width / 2 + item.width / 4
+        min_safe_y = self.height / 2 + item.height / 4
+        min_safe_dist = math.sqrt(min_safe_x ** 2 + min_safe_y ** 2)
+        abs_x = abs(self.x - item.x)
+        abs_y = abs(self.y - item.y)
+        abs_dist = math.sqrt(abs_x ** 2 + abs_y ** 2)
+        if abs_dist < min_safe_dist:
+            return True
+        """
         if item.x >= self.x - self.width / 2:
             if item.x <= self.x + self.width / 2:
                 if item.y >= self.y - self.height / 2:
                     if item.y <= self.y + self.height / 2:
                         return True
+                        """
+
+    def explosion(self):
+        explosion = []
+        direction = random.randint(0, 365)
+        debris_amount = 5
+        for i in range(debris_amount):
+            explosion.append(Debris(self.position, direction, white))
+            direction += 73
+        explosions.append(explosion)
 
 
 class Ship(Space_Object):
@@ -184,21 +203,15 @@ class Asteroid(Space_Object):
         self.direction = random.randint(0, 365)
 
         self.relative_coord = ASTEROID_SHAPES[random.randint(0, len(ASTEROID_SHAPES) - 1)] # noqa
-        # self.relative_coord = [[-self.width / 2, -self.height / 3],
-        #                    [self.width / 6, -self.height / 2],
-        #                    [self.width / 2, -self.height / 6],
-        #                    [self.width / 2, self.height / 3],
-        #                    [self.width / 3, self.height / 2],
-        #                    [self.width / 6, self.height / 2],
-        #                    [-self.width / 6, self.height / 6],
-        #                    [-self.width / 3, self.height / 6],
-        #                    [-self.width / 2, 0]]
 
         rad = -math.radians(self.direction)
         self.speed = [self.speed_limit * math.sin(rad),
                       -self.speed_limit * math.cos(rad)]
 
         self.rotation = random.randint(-20, 20)
+
+    def break_apart(self):
+        self.explosion()
 
 
 class Big_Asteroid(Asteroid):
@@ -209,9 +222,10 @@ class Big_Asteroid(Asteroid):
     def __init__(self, position, color):
         Asteroid.__init__(self, position, color)
 
-    def explode(self, asteroid_list):
+    def break_apart(self):
         for i in range(3):
             asteroids.append(Small_Asteroid(self.position, self.color))
+        self.explosion()
 
 
 class Small_Asteroid(Asteroid):
@@ -221,9 +235,6 @@ class Small_Asteroid(Asteroid):
 
     def __init__(self, position, color):
         Asteroid.__init__(self, position, color)
-
-    def explode(self, asteroid_list):
-        return
 
 
 class Debris(Shot):
@@ -242,29 +253,20 @@ ship = Ship([WIDTH // 2, HEIGHT // 2],
 
 
 def collision_check(asteroids, shots, score):
+    collisions = []
     for i in range(len(asteroids)):
         for j in range(len(shots)):
             if asteroids[i].collision(shots[j]):
-                asteroids[i].explode(asteroids)
-                explosion(asteroids[i])
+                asteroids[i].break_apart()
                 if isinstance(asteroids[i], Big_Asteroid):
                     score += 100
                 else:
                     score += 50
-                del asteroids[i]
-                del shots[j]
-                return score
+                collisions.append([i, j])
+    for collision in collisions:
+        del asteroids[collision[0]]
+        del shots[collision[1]]
     return score
-
-
-def explosion(item):
-    explosion = []
-    direction = random.randint(0, 365)
-    debris_amount = 5
-    for i in range(debris_amount):
-        explosion.append(Debris(item.position, direction, white))
-        direction += 73
-    explosions.append(explosion)
 
 
 def handle_explosions():
