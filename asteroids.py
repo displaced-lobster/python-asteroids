@@ -96,7 +96,7 @@ class Space_Object:
                         return True
                         """
 
-    def explosion(self):
+    def explode(self):
         explosion = []
         direction = random.randint(0, 365)
         debris_amount = 5
@@ -211,7 +211,7 @@ class Asteroid(Space_Object):
         self.rotation = random.randint(-20, 20)
 
     def break_apart(self):
-        self.explosion()
+        self.explode()
 
 
 class Big_Asteroid(Asteroid):
@@ -225,7 +225,7 @@ class Big_Asteroid(Asteroid):
     def break_apart(self):
         for i in range(3):
             asteroids.append(Small_Asteroid(self.position, self.color))
-        self.explosion()
+        self.explode()
 
 
 class Small_Asteroid(Asteroid):
@@ -262,10 +262,15 @@ def collision_check(asteroids, shots, score):
                     score += 100
                 else:
                     score += 50
-                collisions.append([i, j])
-    for collision in collisions:
-        del asteroids[collision[0]]
-        del shots[collision[1]]
+                del asteroids[i]
+                del shots[j]
+                return score
+
+    for asteroid in asteroids:
+        if ship.collision(asteroid):
+            ship.explode()
+            game_over()
+
     return score
 
 
@@ -283,6 +288,11 @@ def handle_score(score):
     display_score = font.render(str(score), False, white)
     width, height = font.size(str(score))
     screen.blit(display_score, (WIDTH - width - 10, HEIGHT - height - 10))
+
+
+def game_over():
+    ship.x = WIDTH // 2
+    ship.y = HEIGHT // 2
 
 
 def game(score):
