@@ -19,6 +19,8 @@ class Game_Space:
     asteroids = []
     explosions = []
     score = 0
+    big_asteroids = 0
+    satelite = None
 
     def __init__(self):
         self.ship = Ship([WIDTH // 2, HEIGHT // 2], SHIP_W, SHIP_H)
@@ -32,6 +34,7 @@ class Game_Space:
                     self.asteroids[i].break_apart()
                     if isinstance(self.asteroids[i], Big_Asteroid):
                         self.score += 100
+                        self.big_asteroids -= 1
                     else:
                         self.score += 50
                     del self.asteroids[i]
@@ -71,6 +74,8 @@ class Game_Space:
         for explosion in self.explosions:
             for debris in explosion:
                 debris.draw()
+        if self.satelite is not None:
+            self.satelite.draw()
 
     def move_all(self):
         self.ship.move()
@@ -81,11 +86,20 @@ class Game_Space:
         for explosion in self.explosions:
             for debris in explosion:
                 debris.move()
+        if self.satelite is not None:
+            self.satelite.move()
 
     def spawn_asteroids(self):
-        if len(self.asteroids) < ASTEROID_LIMIT:
+        if self.big_asteroids < ASTEROID_LIMIT:
             if random.choice([True, False]):
                 self.asteroids.append(Big_Asteroid(None))
+                self.big_asteroids += 1
+
+    def spawn_satelite(self):
+        if self.score > 0:
+            if self.score % 500 == 0:
+                if self.satelite is None:
+                    self.satelite = Satelite()
 
 
 class Space_Object:
@@ -303,7 +317,7 @@ class Big_Asteroid(Asteroid):
         Asteroid.__init__(self, position)
 
     def break_apart(self):
-        for i in range(3):
+        for i in range(random.randint(1, 4)):
             game.asteroids.append(Small_Asteroid(self.position))
         self.explode()
 
@@ -333,13 +347,16 @@ class Satelite(Space_Object):
         Space_Object.__init__(self, [WIDTH, HEIGHT // 2], 12, 12)
 
     def draw(self):
-        line_1 = [self.x, self.y - self.height / 4]
-        line_2 = [self.x + self.width / 4, self.y]
-        line_3 = [self.x, self.y + self.height / 4]
+        line_1 = [[self.x, self.y - self.height // 4],
+                  [self.x + self.width * 3 // 4, self.y - self.height // 2]]
+        line_2 = [[self.x + self.width // 4, self.y],
+                  [self.x + self.width * 3 // 4, self.y]]
+        line_3 = [[self.x, self.y + self.height // 4],
+                  [self.x - self.width * 3 // 4, self.y - self.height // 2]]
         pygame.draw.circle(game.screen,
                            self.color,
-                           self.position,
-                           self.width/4, 1)
+                           (self.x, self.y),
+                           self.width // 4)
         pygame.draw.line(game.screen, self.color, line_1[0], line_1[1], 1)
         pygame.draw.line(game.screen, self.color, line_2[0], line_2[1], 1)
         pygame.draw.line(game.screen, self.color, line_3[0], line_3[1], 1)
@@ -354,19 +371,13 @@ def main(game):
         game.screen.fill(BLACK)
         game.update_score()
         game.draw_all()
-
         game.ship.control(pygame.key.get_pressed())
-
-        game.move_all()
-
-        game.spawn_asteroids()
-
         game.collision_check()
-
+        game.move_all()
+        game.spawn_asteroids()
+        # game.spawn_satelite()
         game.handle_explosions()
-
         game.ship.remove_shots()
-
         pygame.display.flip()
         pygame.time.wait(25)
 
