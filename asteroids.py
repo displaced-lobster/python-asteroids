@@ -24,9 +24,9 @@ class Game_Space:
     target_score = 1000
 
     def __init__(self):
-        self.ship = Ship([WIDTH // 2, HEIGHT // 2], SHIP_W, SHIP_H)
         self.screen = pygame.display.set_mode(SIZE)
         self.font = pygame.font.SysFont('monospace', 25)
+        self.ship = Ship([WIDTH // 2, HEIGHT // 2], SHIP_W, SHIP_H)
 
     def collision_check(self):
         if self.satelite is not None:
@@ -52,8 +52,8 @@ class Game_Space:
                     return
 
         for asteroid in self.asteroids:
-            if game.ship.collision(asteroid):
-                game.ship.explode()
+            if self.ship.collision(asteroid):
+                self.ship.explode()
                 self.game_over()
 
     def handle_explosions(self):
@@ -114,6 +114,29 @@ class Game_Space:
                 self.satelite = None
 
 
+class Menu:
+    options = {'New Game': True, 'Exit': False}
+    spacing = 10
+    padding_top = 100
+    padding_left = 80
+
+    def __init__(self):
+        self.font = pygame.font.SysFont('monospace', 45)
+
+    def make_menu(self):
+        x = self.padding_left
+        y = self.padding_top
+        for option, active in self.options.items():
+            if active:
+                font = self.font.set_underline()
+            else:
+                font = self.font
+            button = font.render(option, False, WHITE)
+            width, height = font.size(option)
+            self.screen.blit(button, (x, y))
+            y += height + self.spacing
+
+
 class Space_Object:
     speed = [0, 0]
     direction = 0
@@ -129,6 +152,7 @@ class Space_Object:
         self.y = position[1]
         self.width = width
         self.height = height
+        self.screen = pygame.display.get_surface()
 
     def move(self):
         rad = -math.radians(self.direction + self.rotation)
@@ -173,7 +197,7 @@ class Space_Object:
         return point_list
 
     def draw(self):
-        pygame.draw.polygon(game.screen, self.color, self.points(), 2)
+        pygame.draw.polygon(self.screen, self.color, self.points(), 2)
 
     def collision(self, item):
         min_safe_x = self.width / 2 + item.width / 4
@@ -243,10 +267,10 @@ class Ship(Space_Object):
 
 
 class Shot(Space_Object):
-
     width = 2
     height = 6
     speed_limit = MAX_SPEED + 4
+    screen_wrap = False
 
     def __init__(self, position, direction):
         Space_Object.__init__(self, position, self.width, self.height)
@@ -258,7 +282,7 @@ class Shot(Space_Object):
 
     def draw(self):
         points = self.points()
-        pygame.draw.line(game.screen,
+        pygame.draw.line(self.screen,
                          self.color,
                          points[0],
                          points[1],
@@ -371,16 +395,16 @@ class Satelite(Space_Object):
                   [self.x + self.width * 3 // 4, self.y]]
         line_3 = [[self.x, self.y + self.height // 4],
                   [self.x + self.width * 3 // 4, self.y + self.height // 2]]
-        pygame.draw.circle(game.screen,
+        pygame.draw.circle(self.screen,
                            self.color,
                            (int(self.x), int(self.y)),
                            self.width // 4)
-        pygame.draw.line(game.screen, self.color, line_1[0], line_1[1], 1)
-        pygame.draw.line(game.screen, self.color, line_2[0], line_2[1], 1)
-        pygame.draw.line(game.screen, self.color, line_3[0], line_3[1], 1)
+        pygame.draw.line(self.screen, self.color, line_1[0], line_1[1], 1)
+        pygame.draw.line(self.screen, self.color, line_2[0], line_2[1], 1)
+        pygame.draw.line(self.screen, self.color, line_3[0], line_3[1], 1)
 
 
-def main(game):
+def run_game(game):
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -396,6 +420,26 @@ def main(game):
         game.spawn_satelite()
         game.handle_explosions()
         game.ship.remove_shots()
+        pygame.display.flip()
+        pygame.time.wait(25)
+
+
+def main(game):
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                sys.exit()
+        game.screen.fill(BLACK)
+        game.update_score()
+        game.draw_all()
+        game.ship.control(pygame.key.get_pressed())
+        game.collision_check()
+        game.move_all()
+        game.spawn_asteroids()
+        game.spawn_satelite()
+        game.handle_explosions()
+        game.ship.remove_shots()
+
         pygame.display.flip()
         pygame.time.wait(25)
 
