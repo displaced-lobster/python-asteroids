@@ -12,7 +12,7 @@ WHITE = 255, 255, 255
 SHIP_W = 12
 SHIP_H = 25
 MAX_SPEED = 3
-ASTEROID_LIMIT = 5
+ASTEROID_LIMIT = 2
 
 
 class Game_Space:
@@ -21,6 +21,7 @@ class Game_Space:
     score = 0
     big_asteroids = 0
     satelite = None
+    target_score = 1000
 
     def __init__(self):
         self.ship = Ship([WIDTH // 2, HEIGHT // 2], SHIP_W, SHIP_H)
@@ -28,6 +29,15 @@ class Game_Space:
         self.font = pygame.font.SysFont('monospace', 25)
 
     def collision_check(self):
+        if self.satelite is not None:
+            for i in range(len(self.ship.shots)):
+                if self.satelite.collision(self.ship.shots[i]):
+                    self.score += 850
+                    del self.ship.shots[i]
+                    self.satelite.explode()
+                    self.satelite = None
+                    return
+
         for i in range(len(self.asteroids)):
             for j in range(len(self.ship.shots)):
                 if self.asteroids[i].collision(self.ship.shots[j]):
@@ -96,10 +106,12 @@ class Game_Space:
                 self.big_asteroids += 1
 
     def spawn_satelite(self):
-        if self.score > 0:
-            if self.score % 500 == 0:
-                if self.satelite is None:
-                    self.satelite = Satelite()
+        if self.score > self.target_score:
+            if self.satelite is None:
+                self.satelite = Satelite()
+                self.target_score *= 2
+            elif self.satelite.x < 0:
+                self.satelite = None
 
 
 class Space_Object:
@@ -109,6 +121,7 @@ class Space_Object:
     speed_limit = MAX_SPEED
     rotation = 0
     color = WHITE
+    screen_wrap = True
 
     def __init__(self, position, width, height):
         self.position = position
@@ -136,14 +149,17 @@ class Space_Object:
 
         self.x += self.speed[0]
         self.y += self.speed[1]
-        if self.x < 0 - 10:
-            self.x += WIDTH
-        elif self.x > WIDTH + 10:
-            self.x -= WIDTH
-        if self.y < 0 - 10:
-            self.y += HEIGHT
-        elif self.y > HEIGHT + 10:
-            self.y -= HEIGHT
+
+        if self.screen_wrap:
+            if self.x < 0 - 10:
+                self.x += WIDTH
+            elif self.x > WIDTH + 10:
+                self.x -= WIDTH
+            if self.y < 0 - 10:
+                self.y += HEIGHT
+            elif self.y > HEIGHT + 10:
+                self.y -= HEIGHT
+
         self.position = [self.x, self.y]
 
     def points(self):
@@ -333,6 +349,7 @@ class Small_Asteroid(Asteroid):
 
 class Debris(Shot):
     width = 1
+    screen_wrap = False
 
     def __init__(self, position, direction):
         self.height = random.randint(1, 20)
@@ -342,9 +359,10 @@ class Debris(Shot):
 
 class Satelite(Space_Object):
     speed = [-MAX_SPEED, 0]
+    screen_wrap = False
 
     def __init__(self):
-        Space_Object.__init__(self, [WIDTH, HEIGHT // 2], 12, 12)
+        Space_Object.__init__(self, [WIDTH, HEIGHT // 2], 12, 10)
 
     def draw(self):
         line_1 = [[self.x, self.y - self.height // 4],
@@ -352,10 +370,10 @@ class Satelite(Space_Object):
         line_2 = [[self.x + self.width // 4, self.y],
                   [self.x + self.width * 3 // 4, self.y]]
         line_3 = [[self.x, self.y + self.height // 4],
-                  [self.x - self.width * 3 // 4, self.y - self.height // 2]]
+                  [self.x + self.width * 3 // 4, self.y + self.height // 2]]
         pygame.draw.circle(game.screen,
                            self.color,
-                           (self.x, self.y),
+                           (int(self.x), int(self.y)),
                            self.width // 4)
         pygame.draw.line(game.screen, self.color, line_1[0], line_1[1], 1)
         pygame.draw.line(game.screen, self.color, line_2[0], line_2[1], 1)
@@ -375,7 +393,7 @@ def main(game):
         game.collision_check()
         game.move_all()
         game.spawn_asteroids()
-        # game.spawn_satelite()
+        game.spawn_satelite()
         game.handle_explosions()
         game.ship.remove_shots()
         pygame.display.flip()
