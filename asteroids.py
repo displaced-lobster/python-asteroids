@@ -122,6 +122,7 @@ class Menu:
 
     def __init__(self):
         self.font = pygame.font.SysFont('monospace', 45)
+        self.screen = pygame.display.get_surface()
 
     def make_menu(self):
         x = self.padding_left
