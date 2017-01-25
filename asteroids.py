@@ -16,6 +16,10 @@ ASTEROID_LIMIT = 2
 
 
 class Game_Space:
+    """Initiates and holds all variables needed for the game to run. Also
+    includes all methods for changing the state of the game: move, shoot, etc.
+    """
+
     asteroids = []
     explosions = []
     score = 0
@@ -24,11 +28,13 @@ class Game_Space:
     target_score = 1000
 
     def __init__(self):
+        # Sets screen, font, and generates player's ship
         self.screen = pygame.display.set_mode(SIZE)
         self.font = pygame.font.SysFont('monospace', 25)
         self.ship = Ship([WIDTH // 2, HEIGHT // 2], SHIP_W, SHIP_H)
 
     def collision_check(self):
+        # Collision check for all objects in the GameSpace
         if self.satelite is not None:
             for i in range(len(self.ship.shots)):
                 if self.satelite.collision(self.ship.shots[i]):
@@ -57,6 +63,7 @@ class Game_Space:
                 self.game_over()
 
     def handle_explosions(self):
+        # Cleans up explosion debris
         for explosion in self.explosions:
             for i in range(len(explosion)):
                 if explosion[i].timer <= 0:
@@ -66,16 +73,20 @@ class Game_Space:
                     explosion[i].timer -= 1
 
     def update_score(self):
+        # Updates the score displayed on the screen
         display_score = self.font.render(str(self.score), False, WHITE)
         width, height = self.font.size(str(self.score))
         self.screen.blit(display_score, (WIDTH - width - 10,
                                          HEIGHT - height - 10))
 
     def game_over(self):
+        # Game over operation
+        # TODO: End game, display high scores
         self.ship.x = WIDTH // 2
         self.ship.y = HEIGHT // 2
 
     def draw_all(self):
+        # Draw all objects in the GameSpace
         self.ship.draw()
         for asteroid in self.asteroids:
             asteroid.draw()
@@ -88,6 +99,7 @@ class Game_Space:
             self.satelite.draw()
 
     def move_all(self):
+        # Move all objects in the GameSpace
         self.ship.move()
         for asteroid in self.asteroids:
             asteroid.move()
@@ -100,31 +112,40 @@ class Game_Space:
             self.satelite.move()
 
     def spawn_asteroids(self):
+        # Spawns BigAsteroids if currently under the limit
         if self.big_asteroids < ASTEROID_LIMIT:
             if random.choice([True, False]):
                 self.asteroids.append(Big_Asteroid(None))
                 self.big_asteroids += 1
 
     def spawn_satelite(self):
+        # Spawns Satelite object if target score is met, increases target each
+        # spawn
         if self.score > self.target_score:
             if self.satelite is None:
                 self.satelite = Satelite()
-                self.target_score *= 2
+                self.target_score *= 3
             elif self.satelite.x < 0:
                 self.satelite = None
 
 
 class Menu:
+    """Menu object to be displayed before and after every game. Work in
+    progress, not yet implmented.
+    """
+
     options = {'New Game': True, 'Exit': False}
     spacing = 10
     padding_top = 100
     padding_left = 80
 
     def __init__(self):
+        # Set font and grab current pygame surface
         self.font = pygame.font.SysFont('monospace', 45)
         self.screen = pygame.display.get_surface()
 
     def make_menu(self):
+        # Draw the menu on the screen
         x = self.padding_left
         y = self.padding_top
         for option, active in self.options.items():
@@ -139,6 +160,7 @@ class Menu:
 
 
 class Space_Object:
+    """Base object for all other objects. Includes draw and move methods."""
     speed = [0, 0]
     direction = 0
     delta_speed = 0
@@ -148,6 +170,8 @@ class Space_Object:
     screen_wrap = True
 
     def __init__(self, position, width, height):
+        # Requires position, width, and height as inputs. Gets the current
+        # pygame surface
         self.position = position
         self.x = position[0]
         self.y = position[1]
@@ -156,6 +180,8 @@ class Space_Object:
         self.screen = pygame.display.get_surface()
 
     def move(self):
+        # Adjust the objects position variables depending on it's speed and
+        # direction
         rad = -math.radians(self.direction + self.rotation)
         sx = self.delta_speed * math.sin(rad)
         sy = self.delta_speed * math.cos(rad)
@@ -188,6 +214,8 @@ class Space_Object:
         self.position = [self.x, self.y]
 
     def points(self):
+        # Returns the objects relative shape adjusted for orientation and
+        # position
         point_list = []
         rad = -math.radians(self.direction)
 
@@ -198,9 +226,12 @@ class Space_Object:
         return point_list
 
     def draw(self):
+        # Draws object on the screen
         pygame.draw.polygon(self.screen, self.color, self.points(), 2)
 
     def collision(self, item):
+        # Determines if a collision has taken place between two objects using
+        # their positions, widths, and heights
         min_safe_x = self.width / 2 + item.width / 4
         min_safe_y = self.height / 2 + item.height / 4
         min_safe_dist = math.sqrt(min_safe_x ** 2 + min_safe_y ** 2)
@@ -211,6 +242,7 @@ class Space_Object:
             return True
 
     def explode(self):
+        # Create an explosion effect be generating debris
         explosion = []
         direction = random.randint(0, 365)
         debris_amount = 5
@@ -221,6 +253,11 @@ class Space_Object:
 
 
 class Ship(Space_Object):
+    """The user controlled space ship. Has special methods shoot, control, and
+    remove_shots. Stores the number of ship shots currently active and applies
+    a shot limit. Holds the ships limiting factors: acceleration, turn speed.
+    """
+
     shots = []
     shot_limit = 10
     shot_delay = 0
@@ -228,6 +265,7 @@ class Ship(Space_Object):
     turn_speed = 5
 
     def __init__(self, position, width, height):
+        # Initialize SpaceObject and set object shape
         Space_Object.__init__(self, position, width, height)
         self.relative_coord = [[-self.width // 2, self.height * 2 // 5],
                                [0, self.height // 5],
@@ -235,6 +273,7 @@ class Ship(Space_Object):
                                [0, -self.height * 3 // 5]]
 
     def shoot(self):
+        # Generate a shot from the front of the ship
         origin = self.points()[3]
         if self.shot_delay == 0:
             if len(self.shots) < 10:
@@ -244,6 +283,7 @@ class Ship(Space_Object):
             self.shot_delay -= 1
 
     def remove_shots(self):
+        # Cleans up shots that have moveed off screen
         for i in range(len(self.shots)):
             if self.shots[i].x < 0 or self.shots[i].y < 0:
                 del self.shots[i]
@@ -253,6 +293,7 @@ class Ship(Space_Object):
                 break
 
     def control(self, keys):
+        # Defines the result from user input and applies it
         if keys[K_w]:
             self.delta_speed -= self.acceleration
         elif keys[K_s]:
