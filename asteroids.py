@@ -309,12 +309,15 @@ class Ship(Space_Object):
 
 
 class Shot(Space_Object):
+    """Shot object, fired from ship and can collide with other space objects."""
+
     width = 2
     height = 6
     speed_limit = MAX_SPEED + 4
     screen_wrap = False
 
     def __init__(self, position, direction):
+        # Calculates speed on initiation
         Space_Object.__init__(self, position, self.width, self.height)
         self.direction = direction
         rad = -math.radians(self.direction)
@@ -323,6 +326,7 @@ class Shot(Space_Object):
         self.relative_coord = [[0, 0], [0, self.height]]
 
     def draw(self):
+        # Drawn as a line instead of the default polygon
         points = self.points()
         pygame.draw.line(self.screen,
                          self.color,
@@ -332,8 +336,12 @@ class Shot(Space_Object):
 
 
 class Asteroid(Space_Object):
+"""Base object for asteroids. Includes different shapes and break apart methods
+for asteroid destruction.
+"""
 
     def __init__(self, position):
+        # Randomly chooses asteroid from collection of shapes.
         ASTEROID_SHAPES = [
                         [[-self.width / 2, -self.height / 3],
                          [-self.width / 3, -self.height / 2],
@@ -362,6 +370,7 @@ class Asteroid(Space_Object):
                          [-self.width / 6, self.height / 3]]
                         ]
 
+        # Randomly choose start position if position is not inherited
         if position is None:
             start = random.choice([1, 2, 3, 4])
             if start == 1:
@@ -387,10 +396,13 @@ class Asteroid(Space_Object):
         self.rotation = random.randint(-20, 20)
 
     def break_apart(self):
+        # Default break_apart calls base explode method
         self.explode()
 
 
 class Big_Asteroid(Asteroid):
+    """Big asteroids are slow and break apart into small asteroids."""
+
     height = 75
     width = 75
     speed_limit = MAX_SPEED - 2
@@ -405,6 +417,8 @@ class Big_Asteroid(Asteroid):
 
 
 class Small_Asteroid(Asteroid):
+    """Small asteroids are fast and are destroyed on collision with a shot."""
+
     height = 20
     width = 20
     speed_limit = MAX_SPEED - 1
@@ -414,6 +428,10 @@ class Small_Asteroid(Asteroid):
 
 
 class Debris(Shot):
+    """Debris uses the shot class to show destruction. Incldues a timer
+    variable to be deleted when timer hits zero.
+    """
+
     width = 1
     screen_wrap = False
 
@@ -424,6 +442,10 @@ class Debris(Shot):
 
 
 class Satelite(Space_Object):
+    """Special, high value target. Moves from right to left across the middle
+    of the screen. A more complex shape than the other sopace objects.
+    """
+
     speed = [-MAX_SPEED, 0]
     screen_wrap = False
 
@@ -431,6 +453,7 @@ class Satelite(Space_Object):
         Space_Object.__init__(self, [WIDTH, HEIGHT // 2], 12, 10)
 
     def draw(self):
+        # Draw method includes a circle and three lines.
         line_1 = [[self.x, self.y - self.height // 4],
                   [self.x + self.width * 3 // 4, self.y - self.height // 2]]
         line_2 = [[self.x + self.width // 4, self.y],
