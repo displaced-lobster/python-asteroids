@@ -1,9 +1,10 @@
 #!/usr/bin/python3
-import sys
-import pygame
-from pygame import K_d, K_a, K_w, K_s, K_SPACE
 import math
+import pygame
 import random
+import sys
+
+from pygame import K_d, K_a, K_w, K_s, K_SPACE
 
 SIZE = WIDTH, HEIGHT = 500, 500
 BLACK = 0, 0, 0
@@ -181,6 +182,7 @@ class Menu:
             y += height + self.spacing
 
     def action(self, keys):
+        # Get user input and change active menu item or do menu action.
         for i in range(len(self.options)):
             if self.options[i][1]:
                 pos = i
