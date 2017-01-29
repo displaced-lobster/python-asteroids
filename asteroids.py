@@ -128,35 +128,75 @@ class Game_Space:
             elif self.satelite.x < 0:
                 self.satelite = None
 
+    def run_game(self):
+        while True:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    sys.exit()
+
+            self.screen.fill(BLACK)
+            self.update_score()
+            self.draw_all()
+            self.ship.control(pygame.key.get_pressed())
+            self.collision_check()
+            self.move_all()
+            self.spawn_asteroids()
+            self.spawn_satelite()
+            self.handle_explosions()
+            self.ship.remove_shots()
+            pygame.display.flip()
+            pygame.time.wait(25)
+
 
 class Menu:
     """Menu object to be displayed before and after every game. Work in
     progress, not yet implmented.
     """
 
-    options = {'New Game': True, 'Exit': False}
+    options = [['New Game', True], ['Exit', False]]
     spacing = 10
     padding_top = 100
     padding_left = 80
 
     def __init__(self):
         # Set font and grab current pygame surface
-        self.font = pygame.font.SysFont('monospace', 45)
+        self.font_inactive = pygame.font.SysFont('monospace', 45)
+        self.font_active = pygame.font.SysFont('monospace', 60)
         self.screen = pygame.display.get_surface()
 
     def make_menu(self):
         # Draw the menu on the screen
         x = self.padding_left
         y = self.padding_top
-        for option, active in self.options.items():
+        for menu_item in self.options:
+            option = menu_item[0]
+            active = menu_item[1]
             if active:
-                font = self.font.set_underline()
+                button = self.font_active.render(option, False, WHITE)
+                width, height = self.font_active.size(option)
             else:
-                font = self.font
-            button = font.render(option, False, WHITE)
-            width, height = font.size(option)
+                button = self.font_inactive.render(option, False, WHITE)
+                width, height = self.font_inactive.size(option)
             self.screen.blit(button, (x, y))
             y += height + self.spacing
+
+    def action(self, keys):
+        for i in range(len(self.options)):
+            if self.options[i][1]:
+                pos = i
+        if keys[K_w]:
+            if pos > 0:
+                self.options[pos][1] = False
+                self.options[pos - 1][1] = True
+        elif keys[K_s]:
+            if pos < len(self.options) - 1:
+                self.options[pos][1] = False
+                self.options[pos + 1][1] = True
+        elif keys[K_SPACE]:
+            if self.options[pos][0] == 'New Game':
+                game.run_game()
+            elif self.options[pos][0] == 'Exit':
+                sys.exit()
 
 
 class Space_Object:
@@ -309,7 +349,8 @@ class Ship(Space_Object):
 
 
 class Shot(Space_Object):
-    """Shot object, fired from ship and can collide with other space objects."""
+    """Shot object, fired from ship and can collide with other space objects.
+    """
 
     width = 2
     height = 6
@@ -336,9 +377,9 @@ class Shot(Space_Object):
 
 
 class Asteroid(Space_Object):
-"""Base object for asteroids. Includes different shapes and break apart methods
-for asteroid destruction.
-"""
+    """Base object for asteroids. Includes different shapes and break apart
+    methods for asteroid destruction.
+    """
 
     def __init__(self, position):
         # Randomly chooses asteroid from collection of shapes.
@@ -469,41 +510,15 @@ class Satelite(Space_Object):
         pygame.draw.line(self.screen, self.color, line_3[0], line_3[1], 1)
 
 
-def run_game(game):
-    while True:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                sys.exit()
-
-        game.screen.fill(BLACK)
-        game.update_score()
-        game.draw_all()
-        game.ship.control(pygame.key.get_pressed())
-        game.collision_check()
-        game.move_all()
-        game.spawn_asteroids()
-        game.spawn_satelite()
-        game.handle_explosions()
-        game.ship.remove_shots()
-        pygame.display.flip()
-        pygame.time.wait(25)
-
-
 def main(game):
+    menu = Menu()
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 sys.exit()
         game.screen.fill(BLACK)
-        game.update_score()
-        game.draw_all()
-        game.ship.control(pygame.key.get_pressed())
-        game.collision_check()
-        game.move_all()
-        game.spawn_asteroids()
-        game.spawn_satelite()
-        game.handle_explosions()
-        game.ship.remove_shots()
+        menu.make_menu()
+        menu.action(pygame.key.get_pressed())
 
         pygame.display.flip()
         pygame.time.wait(25)
