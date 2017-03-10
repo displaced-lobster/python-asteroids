@@ -21,18 +21,17 @@ class Game_Space:
     includes all methods for changing the state of the game: move, shoot, etc.
     """
 
-    asteroids = []
-    explosions = []
-    score = 0
-    big_asteroids = 0
-    satelite = None
-    target_score = 1000
-
     def __init__(self):
         # Sets screen, font, and generates player's ship
         self.screen = pygame.display.set_mode(SIZE)
         self.font = pygame.font.SysFont('monospace', 25)
         self.ship = Ship([WIDTH // 2, HEIGHT // 2], SHIP_W, SHIP_H)
+        self.asteroids = []
+        self.explosions = []
+        self.score = 0
+        self.big_asteroids = 0
+        self.satelite = None
+        self.target_score = 1000
 
     def collision_check(self):
         # Collision check for all objects in the GameSpace
@@ -154,16 +153,15 @@ class Menu:
     progress, not yet implmented.
     """
 
-    options = [['New Game', True], ['Exit', False]]
-    spacing = 10
-    padding_top = 100
-    padding_left = 80
-
     def __init__(self):
         # Set font and grab current pygame surface
         self.font_inactive = pygame.font.SysFont('monospace', 45)
         self.font_active = pygame.font.SysFont('monospace', 60)
         self.screen = pygame.display.get_surface()
+        self.options = [['New Game', True], ['Exit', False]]
+        self.spacing = 10
+        self.padding_top = 100
+        self.padding_left = 80
 
     def make_menu(self):
         # Draw the menu on the screen
@@ -203,13 +201,6 @@ class Menu:
 
 class Space_Object:
     """Base object for all other objects. Includes draw and move methods."""
-    speed = [0, 0]
-    direction = 0
-    delta_speed = 0
-    speed_limit = MAX_SPEED
-    rotation = 0
-    color = WHITE
-    screen_wrap = True
 
     def __init__(self, position, width, height):
         # Requires position, width, and height as inputs. Gets the current
@@ -220,6 +211,13 @@ class Space_Object:
         self.width = width
         self.height = height
         self.screen = pygame.display.get_surface()
+        self.speed = [0, 0]
+        self.direction = 0
+        self.delta_speed = 0
+        self.speed_limit = MAX_SPEED
+        self.rotation = 0
+        self.color = WHITE
+        self.screen_wrap = True
 
     def move(self):
         # Adjust the objects position variables depending on it's speed and
@@ -300,12 +298,6 @@ class Ship(Space_Object):
     a shot limit. Holds the ships limiting factors: acceleration, turn speed.
     """
 
-    shots = []
-    shot_limit = 10
-    shot_delay = 0
-    acceleration = 2
-    turn_speed = 5
-
     def __init__(self, position, width, height):
         # Initialize SpaceObject and set object shape
         Space_Object.__init__(self, position, width, height)
@@ -313,6 +305,11 @@ class Ship(Space_Object):
                                [0, self.height // 5],
                                [self.width // 2, self.height * 2 // 5],
                                [0, -self.height * 3 // 5]]
+        self.shots = []
+        self.shot_limit = 10
+        self.shot_delay = 0
+        self.acceleration = 2
+        self.turn_speed = 5
 
     def shoot(self):
         # Generate a shot from the front of the ship
@@ -354,13 +351,12 @@ class Shot(Space_Object):
     """Shot object, fired from ship and can collide with other space objects.
     """
 
-    width = 2
-    height = 6
-    speed_limit = MAX_SPEED + 4
-    screen_wrap = False
-
     def __init__(self, position, direction):
         # Calculates speed on initiation
+        self.width = 2
+        self.height = 6
+        self.speed_limit = MAX_SPEED + 4
+        self.screen_wrap = False
         Space_Object.__init__(self, position, self.width, self.height)
         self.direction = direction
         rad = -math.radians(self.direction)
@@ -446,11 +442,10 @@ class Asteroid(Space_Object):
 class Big_Asteroid(Asteroid):
     """Big asteroids are slow and break apart into small asteroids."""
 
-    height = 75
-    width = 75
-    speed_limit = MAX_SPEED - 2
-
     def __init__(self, position):
+        self.height = 75
+        self.width = 75
+        self.speed_limit = MAX_SPEED - 2
         Asteroid.__init__(self, position)
 
     def break_apart(self):
@@ -475,10 +470,8 @@ class Debris(Shot):
     variable to be deleted when timer hits zero.
     """
 
-    width = 1
-    screen_wrap = False
-
     def __init__(self, position, direction):
+        self.width = 1
         self.height = random.randint(1, 20)
         Shot.__init__(self, position, direction)
         self.timer = random.randint(5, 15)
@@ -489,11 +482,10 @@ class Satelite(Space_Object):
     of the screen. A more complex shape than the other sopace objects.
     """
 
-    speed = [-MAX_SPEED, 0]
-    screen_wrap = False
-
     def __init__(self):
         Space_Object.__init__(self, [WIDTH, HEIGHT // 2], 12, 10)
+        self.speed = [-MAX_SPEED, 0]
+        self.screen_wrap = False
 
     def draw(self):
         # Draw method includes a circle and three lines.
